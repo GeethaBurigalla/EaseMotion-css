@@ -1,0 +1,190 @@
+/* ==========================================================================
+   Scroll-Linked Progress Story Page
+   - Top progress bar width is updated by JS on scroll (a plain percentage
+     can't be derived in CSS alone without scroll-driven animations, which
+     aren't universally supported yet), but ALL the motion — fades, pop-ins,
+     transitions — is pure CSS, only triggered by JS/IntersectionObserver.
+   ========================================================================== */
+
+:root {
+  --bg: #fbf9f6;
+  --surface: #ffffff;
+  --text: #1c1b19;
+  --text-muted: #6b665f;
+  --accent: #b5622b;
+  --border: #e7e1d8;
+
+  --transition-speed: 550ms;
+  --transition-ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  line-height: 1.7;
+}
+
+/* ---- Top progress bar ---------------------------------------------------- */
+.progress-track {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background-color: var(--border);
+  z-index: 100;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background-color: var(--accent);
+  /* Smooths the width jumps between scroll-event ticks */
+  transition: width 80ms linear;
+}
+
+/* ---- Story shell ---------------------------------------------------------- */
+.story {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 4rem 1.5rem 3rem;
+}
+
+.story-hero {
+  margin-bottom: 3rem;
+  text-align: center;
+}
+
+.story-kicker {
+  margin: 0 0 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  color: var(--accent);
+  font-family: system-ui, sans-serif;
+}
+
+.story-hero h1 {
+  margin: 0 0 1rem;
+  font-size: 2.25rem;
+  line-height: 1.2;
+}
+
+.story-sub {
+  color: var(--text-muted);
+  font-size: 1rem;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+/* ---- Chapters: fade + rise in, revealed via .is-visible ------------------- */
+.chapter {
+  margin-bottom: 3rem;
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity var(--transition-speed) var(--transition-ease),
+    transform var(--transition-speed) var(--transition-ease);
+}
+
+.chapter.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.chapter h2 {
+  font-size: 1.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.chapter p {
+  margin: 0 0 1rem;
+  font-size: 1.05rem;
+}
+
+/* ---- Footnote reference marks --------------------------------------------- */
+.footnote-ref {
+  color: var(--accent);
+  cursor: pointer;
+  font-weight: 700;
+  padding: 0 0.15em;
+}
+
+.footnote-ref:hover,
+.footnote-ref:focus-visible {
+  text-decoration: underline;
+}
+
+/* ---- Footnote cards: pop-in via IntersectionObserver ---------------------- */
+.footnote {
+  display: flex;
+  gap: 0.75rem;
+  max-width: 480px;
+  margin: 0 auto 3rem;
+  padding: 1rem 1.25rem;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+
+  opacity: 0;
+  transform: scale(0.92);
+  transition:
+    opacity var(--transition-speed) var(--transition-ease),
+    transform var(--transition-speed) var(--transition-ease);
+}
+
+.footnote.is-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.footnote-number {
+  flex-shrink: 0;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.footnote p {
+  margin: 0;
+}
+
+/* ---- Footer ---------------------------------------------------------------- */
+.story-footer {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-family: system-ui, sans-serif;
+  border-top: 1px solid var(--border);
+  padding-top: 1.5rem;
+  margin-top: 2rem;
+}
+
+.story-footer code {
+  background-color: var(--surface);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+}
+
+/* ---- Reduced motion: reveal instantly, no transform/opacity animation ---- */
+@media (prefers-reduced-motion: reduce) {
+  .chapter,
+  .footnote,
+  .progress-fill {
+    transition: none !important;
+  }
+
+  .chapter,
+  .footnote {
+    opacity: 1;
+    transform: none;
+  }
+}

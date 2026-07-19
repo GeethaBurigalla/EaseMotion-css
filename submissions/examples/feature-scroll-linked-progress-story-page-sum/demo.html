@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scroll-Linked Progress Story Page</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Top scroll progress bar -->
+  <div class="progress-track" aria-hidden="true">
+    <div class="progress-fill" id="progress-fill"></div>
+  </div>
+
+  <main class="story">
+
+    <header class="story-hero">
+      <p class="story-kicker">A short field guide</p>
+      <h1>How Fog Rolls Off the Hills</h1>
+      <p class="story-sub">Scroll to read. The bar above tracks your progress, each chapter fades in as it arrives, and footnotes pop in as you reach them.</p>
+    </header>
+
+    <article>
+
+      <section class="chapter" data-chapter>
+        <h2>I. The Valley Wakes Slowly</h2>
+        <p>
+          Before sunrise, the valley floor holds a lake of fog that never
+          quite touches water. It pools in the low ground the way cold
+          air always does, settling into the shapes of things it can't
+          see<sup class="footnote-ref" data-footnote-target="fn-1">1</sup>.
+        </p>
+        <p>
+          By the time the ridge line catches the first light, the fog has
+          already started to thin at the edges, unwinding itself in slow
+          ribbons that drift uphill against all expectation.
+        </p>
+      </section>
+
+      <aside class="footnote" id="fn-1" data-footnote>
+        <span class="footnote-number">1</span>
+        <p>Cold air is denser than warm air, so it sinks into valleys and low points overnight — the same reason frost forms first in dips in a field.</p>
+      </aside>
+
+      <section class="chapter" data-chapter>
+        <h2>II. Where the Warmth Wins</h2>
+        <p>
+          Fog burns off from the top down, not the bottom up. The hills
+          catch sun first, and the warmed air there starts to rise,
+          pulling cooler, damper air up from the valley to replace it.
+        </p>
+        <p>
+          It's less a lifting and more a trade — one parcel of air for
+          another, over and over, until the whole basin has turned itself
+          inside out<sup class="footnote-ref" data-footnote-target="fn-2">2</sup>.
+        </p>
+      </section>
+
+      <aside class="footnote" id="fn-2" data-footnote>
+        <span class="footnote-number">2</span>
+        <p>This convective exchange is the same basic mechanism behind sea breezes and mountain valley winds — warm air rising creates a pressure gradient that pulls in cooler air behind it.</p>
+      </aside>
+
+      <section class="chapter" data-chapter>
+        <h2>III. The Last Ribbon</h2>
+        <p>
+          The last of the fog usually survives in whatever spot the sun
+          reaches last — behind a barn, under a stand of pines, along the
+          shaded side of the creek. It isn't stubbornness. It's just
+          geometry.
+        </p>
+        <p>
+          By mid-morning it's gone entirely, and the valley looks like it
+          was never anything but dry grass and light<sup class="footnote-ref" data-footnote-target="fn-3">3</sup>.
+        </p>
+      </section>
+
+      <aside class="footnote" id="fn-3" data-footnote>
+        <span class="footnote-number">3</span>
+        <p>Local topography — a stand of trees, a barn, a north-facing slope — can delay this by twenty minutes or more, which is why fog patches often seem to "linger" in the same few spots every morning.</p>
+      </aside>
+
+      <section class="chapter" data-chapter>
+        <h2>IV. What the Fog Leaves Behind</h2>
+        <p>
+          What fog leaves is easy to miss: a faint dampness on fence
+          posts, a slightly darker line of soil along the tree line,
+          spiderwebs suddenly visible because every thread is beaded with
+          water.
+        </p>
+        <p>
+          None of it lasts past noon. But it's there every clear morning,
+          the same quiet trade of warm for cool, repeating itself before
+          anyone is awake to watch it happen.
+        </p>
+      </section>
+
+    </article>
+
+    <footer class="story-footer">
+      <p>End of story &middot; scroll-linked progress, chapter fades, and footnote pop-ins are all CSS transitions driven by <code>IntersectionObserver</code>.</p>
+    </footer>
+
+  </main>
+
+  <script>
+    (function () {
+      var reduceMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
+
+      /* ---- Top scroll progress bar ------------------------------------ */
+      var fill = document.getElementById("progress-fill");
+
+      function updateProgress() {
+        var scrollTop = window.scrollY || document.documentElement.scrollTop;
+        var docHeight =
+          document.documentElement.scrollHeight - window.innerHeight;
+        var progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+        fill.style.width = progress + "%";
+      }
+
+      updateProgress();
+      window.addEventListener("scroll", updateProgress, { passive: true });
+      window.addEventListener("resize", updateProgress);
+
+      /* ---- Chapter fade-in on enter, via IntersectionObserver --------- */
+      var chapterObserver = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("is-visible");
+              chapterObserver.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.2, rootMargin: reduceMotion ? "0px" : "0px 0px -10% 0px" }
+      );
+
+      document.querySelectorAll("[data-chapter]").forEach(function (el) {
+        chapterObserver.observe(el);
+      });
+
+      /* ---- Footnote pop-in on enter, via IntersectionObserver --------- */
+      var footnoteObserver = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("is-visible");
+              footnoteObserver.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.4 }
+      );
+
+      document.querySelectorAll("[data-footnote]").forEach(function (el) {
+        footnoteObserver.observe(el);
+      });
+
+      /* ---- Clicking a footnote reference scrolls its note into view --- */
+      document.querySelectorAll(".footnote-ref").forEach(function (ref) {
+        ref.addEventListener("click", function () {
+          var targetId = ref.getAttribute("data-footnote-target");
+          var target = document.getElementById(targetId);
+          if (target) {
+            target.scrollIntoView({
+              behavior: reduceMotion ? "auto" : "smooth",
+              block: "center",
+            });
+          }
+        });
+      });
+    })();
+  </script>
+
+</body>
+</html>
