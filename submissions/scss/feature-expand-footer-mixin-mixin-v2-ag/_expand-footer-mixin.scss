@@ -1,0 +1,124 @@
+// ============================================================
+// Feature: Expand Footer Mixin (v2-ag)
+// Issue: #54765 — beginner-friendly "Expand Footer" hover effect
+// Track: submissions/scss (SCSS)
+//
+// NOTE: the canonical folder name requested by the issue
+// (feature-expand-footer-mixin-mixin-ag) was already used by a
+// prior submission for a duplicate issue (#375), so this
+// submission uses the -v2-ag suffix to avoid a collision, per
+// this repo's existing convention for duplicate slugs.
+// ============================================================
+//
+// Usage:
+//   @use 'expand-footer-mixin' as *;
+//
+//   .site-footer {
+//     @include ease-expand-footer-mixin-mixin-v2-ag(0.4s);
+//   }
+//
+// ============================================================
+
+/// Smoothly expands a footer (or any container) from a collapsed
+/// height to its full content height on hover / keyboard focus,
+/// then collapses again when the pointer/focus leaves.
+///
+/// The expandable region must be wrapped in an element with
+/// `overflow: hidden` (this mixin sets that up for you) so the
+/// `max-height` transition has something to animate against.
+///
+/// @param {Time} $duration [0.4s]
+///   Length of the expand/collapse transition.
+/// @param {String} $easing [ease]
+///   Timing function for the transition.
+/// @param {Length} $collapsed-height [3.5rem]
+///   Visible height while collapsed (e.g. just a copyright line).
+/// @param {Length} $expanded-max-height [40rem]
+///   Upper bound used for the expanded `max-height`. Set this
+///   comfortably larger than the tallest expected footer content —
+///   `max-height` (not `height`) is what makes the transition work
+///   without knowing the exact content height in advance.
+///
+/// @example scss
+///   @use 'expand-footer-mixin' as *;
+///
+///   .site-footer {
+///     @include ease-expand-footer-mixin-mixin-v2-ag(0.4s);
+///   }
+///
+/// @example scss — slower reveal, taller expanded content
+///   .site-footer--rich {
+///     @include ease-expand-footer-mixin-mixin-v2-ag(
+///       $duration: 0.6s,
+///       $collapsed-height: 4rem,
+///       $expanded-max-height: 55rem
+///     );
+///   }
+@mixin ease-expand-footer-mixin-mixin-v2-ag(
+  $duration: 0.4s,
+  $easing: ease,
+  $collapsed-height: 3.5rem,
+  $expanded-max-height: 40rem
+) {
+  overflow: hidden;
+  max-height: $collapsed-height;
+  transition: max-height $duration $easing;
+  will-change: max-height;
+
+  // Expand on hover (mouse) and on focus-within (keyboard users
+  // tabbing into a link inside the footer) so the effect is usable
+  // without a pointing device.
+  &:hover,
+  &:focus-within {
+    max-height: $expanded-max-height;
+  }
+
+  // Accessibility: users who prefer reduced motion get the same
+  // expand/collapse behavior instantly, with no animated transition.
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+    animation: none;
+  }
+}
+
+/// Optional helper: ready-to-use footer chrome (layout + spacing)
+/// with the expand behavior already wired in, for quick prototyping.
+///
+/// @param {Time} $duration [0.4s]
+/// @param {Length} $collapsed-height [3.5rem]
+/// @param {Length} $expanded-max-height [40rem]
+/// @param {Color} $bg [#111827]
+/// @param {Color} $fg [#f9fafb]
+///
+/// @example scss
+///   .site-footer {
+///     @include ease-expand-footer-surface-v2-ag;
+///   }
+@mixin ease-expand-footer-surface-v2-ag(
+  $duration: 0.4s,
+  $collapsed-height: 3.5rem,
+  $expanded-max-height: 40rem,
+  $bg: #111827,
+  $fg: #f9fafb
+) {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  background: $bg;
+  color: $fg;
+
+  @include ease-expand-footer-mixin-mixin-v2-ag(
+    $duration: $duration,
+    $collapsed-height: $collapsed-height,
+    $expanded-max-height: $expanded-max-height
+  );
+
+  a {
+    color: inherit;
+  }
+
+  // Visible focus ring for keyboard users tabbing through footer links.
+  a:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+}
